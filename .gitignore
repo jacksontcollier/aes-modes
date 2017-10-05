@@ -1,0 +1,6 @@
+**.swp
+**.o
+cbc-enc
+cbc-dec
+ctr-enc
+ctr-dec
