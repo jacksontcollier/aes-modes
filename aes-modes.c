@@ -45,6 +45,12 @@ ArgFlags* parse_arg_flags(int argc, char * const argv[])
     }
   }
 
+  if (arg_flags->key_file == NULL || arg_flags->in_file == NULL ||
+      arg_flags->out_file == NULL) {
+    fprintf(stderr, "-k -i -o options are required\n");
+    exit(1);
+  }
+
   return arg_flags;
 }
 
