@@ -50,4 +50,6 @@ size_t get_cbc_pkcs7pad_required(const ByteBuf* unpadded_plaintext);
 
 ByteBuf* generate_new_iv();
 
+void aes_block_xor(const unsigned char* plaintext_block,
+    const unsigned char* ciphertext_block, unsigned char* out);
 #endif

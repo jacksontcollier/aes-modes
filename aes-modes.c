@@ -237,3 +237,15 @@ ByteBuf* generate_new_iv()
   return iv;
 }
 
+void aes_block_xor(const unsigned char* plaintext_block,
+    const unsigned char* ciphertext_block, unsigned char* out)
+{
+  size_t i;
+
+  for (i = 0; i < AES_BLOCK_BYTE_LEN; i++) {
+    out[i] = plaintext_block[i] ^ ciphertext_block[i];
+  }
+
+  return;
+}
+
