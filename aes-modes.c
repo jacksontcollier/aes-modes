@@ -201,13 +201,11 @@ ByteBuf* get_cbc_plaintext(const char* plaintext_file)
   padded_plaintext->len = unpadded_plaintext->len + pad_bytes_required;
   padded_plaintext->data = (unsigned char *) malloc(padded_plaintext->len);
 
-  for (i = 0; i < unpadded_plaintext->len; i++) {
-    padded_plaintext->data[i] = unpadded_plaintext->data[i];
-  }
+  memcpy(padded_plaintext->data, unpadded_plaintext->data,
+      unpadded_plaintext->len);
 
-  while (i < padded_plaintext->len) {
+  for (i = unpadded_plaintext->len; i < padded_plaintext->len; i++) {
     padded_plaintext->data[i] = (unsigned char) pad_bytes_required;
-    i++;
   }
 
   return padded_plaintext;
@@ -280,7 +278,6 @@ const EVP_CIPHER* get_evp_cipher_type(const AesKey *aes_key)
 ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
 {
   int outlen;
-  size_t i;
   ByteBuf* cbc_ciphertext;
   EVP_CIPHER_CTX* ctx;
   unsigned char xor_out_buf[AES_BLOCK_BYTE_LEN];
@@ -290,9 +287,7 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
   cbc_ciphertext->data = (unsigned char *) malloc(cbc_ciphertext->len);
 
   /* prepend iv to ciphertext */
-  for (i = 0; i < iv->len; i++) {
-    cbc_ciphertext->data[i] = iv->data[i];
-  }
+  memcpy(cbc_ciphertext->data, iv->data, AES_BLOCK_BYTE_LEN);
 
   ctx = EVP_CIPHER_CTX_new();
   EVP_EncryptInit_ex(ctx, get_evp_cipher_type(aes_key), NULL,
@@ -313,7 +308,7 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
 ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext)
 {
   int outlen;
-  size_t i, j;
+  size_t i;
   ByteBuf* cbc_plaintext;
   EVP_CIPHER_CTX* ctx;
   unsigned char aes_out_buf[AES_BLOCK_BYTE_LEN];
@@ -328,14 +323,12 @@ ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext)
       aes_key->byte_encoding->data, NULL);
   EVP_CIPHER_CTX_set_padding(ctx, 0);
 
-  for (i = cbc_plaintext->len - AES_BLOCK_BYTE_LEN;
-      i >= 0; i -= AES_BLOCK_BYTE_LEN) {
+  for (i = cbc_plaintext->len - AES_BLOCK_BYTE_LEN; i >= 0;
+      i -= AES_BLOCK_BYTE_LEN) {
     EVP_DecryptUpdate(ctx, aes_out_buf, &outlen,
         &cbc_ciphertext->data[i + AES_BLOCK_BYTE_LEN], AES_BLOCK_BYTE_LEN);
     aes_block_xor(aes_out_buf, &cbc_ciphertext->data[i], plaintext_buf);
-    for (j = 0; j < AES_BLOCK_BYTE_LEN; j++) {
-      cbc_plaintext->data[i + j] = plaintext_buf[j];
-    }
+    memcpy(&cbc_plaintext->data[i], plaintext_buf, AES_BLOCK_BYTE_LEN);
   }
   EVP_CIPHER_CTX_free(ctx);
 
