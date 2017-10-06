@@ -71,6 +71,17 @@ void print_arg_flags(const ArgFlags *arg_flags)
   }
 }
 
+ByteBuf* new_ByteBuf()
+{
+  ByteBuf* byte_buf;
+
+  byte_buf = (ByteBuf *) malloc(sizeof(ByteBuf));
+  byte_buf->data = NULL;
+  byte_buf->len = 0;
+
+  return byte_buf;
+}
+
 AesKey* new_AesKey()
 {
   AesKey* aes_key;
@@ -84,24 +95,22 @@ AesKey* new_AesKey()
   return aes_key;
 }
 
-char* read_file_contents(char *filename)
+ByteBuf* read_file_contents(char *filename)
 {
   FILE* fin;
-  char* file_buf;
+  ByteBuf* file_buf;
   size_t file_len;
-  size_t bytes_read;
-  size_t end;
 
   fin = fopen(filename, "r");
   fseek(fin, 0, SEEK_END);
   file_len = ftell(fin);
   fseek(fin, 0, SEEK_SET);
-  file_buf = (char *) malloc(sizeof(char) * (file_len + 1));
 
-  if (file_buf != NULL) {
-    bytes_read = fread(file_buf, sizeof(char), file_len, fin);
-    end = bytes_read < file_len - 1 ? bytes_read : file_len - 1;
-    file_buf[end] = '\0';
+  file_buf = new_ByteBuf();
+  file_buf->data = (unsigned char *) malloc(file_len);
+
+  if (file_buf != NULL && file_buf->data != NULL) {
+    file_buf->len = fread(file_buf->data, sizeof(unsigned char), file_len, fin);
   }
   fclose(fin);
 
@@ -114,7 +123,7 @@ AesKey* get_aes_key(char* key_file)
 
   aes_key = new_AesKey();
   aes_key->hex_encoding = read_file_contents(key_file);
-  aes_key->hex_len = strlen(aes_key->hex_encoding);
+  aes_key->hex_len = aes_key->hex_encoding->len;
   aes_key->byte_len = (aes_key->hex_len / 2);
   aes_key->bit_len = aes_key->byte_len * 8;
   aes_key->byte_encoding = hex_decode(aes_key->hex_encoding);
@@ -122,7 +131,7 @@ AesKey* get_aes_key(char* key_file)
   return aes_key;
 }
 
-unsigned char hex_2_dec(char hex_char)
+unsigned char hex_2_dec(unsigned char hex_char)
 {
   if (hex_char >= '0' && hex_char <= '9') {
     return hex_char - '0';
@@ -139,24 +148,23 @@ unsigned char hex_2_dec(char hex_char)
   return hex_char;
 }
 
-unsigned char* hex_decode(char* hex_string)
+ByteBuf* hex_decode(ByteBuf* hex_buf)
 {
   size_t i;
   size_t buf_size;
-  size_t len_hex_string;
-  unsigned char* bytes;
+  ByteBuf* bytes;
 
-  len_hex_string = strlen(hex_string);
-  buf_size = (len_hex_string / 2) + (len_hex_string % 2);
-  bytes = (unsigned char *) malloc(sizeof(unsigned char) * buf_size);
+  buf_size = (hex_buf->len / 2) + (hex_buf->len % 2);
+  bytes = new_ByteBuf();
+  bytes->data = (unsigned char *) malloc(buf_size);
+  bytes->len = buf_size;
 
   if (bytes != NULL) {
-    for (i = 0; i < len_hex_string; i += 2) {
-      bytes[i / 2] = hex_2_dec(hex_string[i]) << 4;
-      if (i + 1 >= len_hex_string) break;
-      bytes[i / 2] |= hex_2_dec(hex_string[i+1]);
+    for (i = 0; i < hex_buf->len; i += 2) {
+      bytes->data[i/2] = hex_2_dec(hex_buf->data[i]) << 4;
+      if (i + 1 >= hex_buf->len) break;
+      bytes->data[i/2] |= hex_2_dec(hex_buf->data[i+1]);
     }
-    bytes[buf_size-1] = '\0';
   }
 
   return bytes;
