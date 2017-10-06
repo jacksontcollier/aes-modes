@@ -9,6 +9,9 @@
 #include <openssl/rand.h>
 
 #define AES_BLOCK_BYTE_LEN 16
+#define AES_128_BIT_KEY_LEN 128
+#define AES_192_BIT_KEY_LEN 192
+#define AES_256_BIT_KEY_LEN 256
 
 const char *arg_flag_options = "k:i:o:v:";
 
@@ -280,13 +283,13 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
   ctx = EVP_CIPHER_CTX_new();
 
   /* choose appropriate aes implementation according to key length */
-  if (aes_key->bit_len == 128) {
+  if (aes_key->bit_len == AES_128_BIT_KEY_LEN) {
     EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
-  } else if (aes_key->bit_len == 192) {
+  } else if (aes_key->bit_len == AES_192_BIT_KEY_LEN) {
     EVP_EncryptInit_ex(ctx, EVP_aes_192_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
-  } else if (aes_key->bit_len == 256) {
+  } else if (aes_key->bit_len == AES_256_BIT_KEY_LEN) {
     EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
   } else {
@@ -322,13 +325,13 @@ ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext)
 
   ctx = EVP_CIPHER_CTX_new();
 
-  if (aes_key->bit_len == 128) {
+  if (aes_key->bit_len == AES_128_BIT_KEY_LEN) {
     EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
-  } else if (aes_key->bit_len == 192) {
+  } else if (aes_key->bit_len == AES_192_BIT_KEY_LEN) {
     EVP_DecryptInit_ex(ctx, EVP_aes_192_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
-  } else if (aes_key->bit_len == 256) {
+  } else if (aes_key->bit_len == AES_256_BIT_KEY_LEN) {
     EVP_DecryptInit_ex(ctx, EVP_aes_256_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
   } else {
