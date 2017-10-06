@@ -290,7 +290,7 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
     EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
   } else {
-    fprintf(stderr, "Invalid key length of %ld\n", aes_key->bit_len);
+    fprintf(stderr, "Invalid key length of %ld\n bits", aes_key->bit_len);
     exit(1);
   }
 
@@ -305,4 +305,49 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
   EVP_CIPHER_CTX_free(ctx);
 
   return cbc_ciphertext;
+}
+
+ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext)
+{
+  int outlen;
+  size_t i, j;
+  ByteBuf* cbc_plaintext;
+  EVP_CIPHER_CTX* ctx;
+  unsigned char aes_out_buf[16];
+  unsigned char plaintext_buf[16];
+
+  cbc_plaintext = new_ByteBuf();
+  cbc_plaintext->len = cbc_ciphertext->len - AES_BLOCK_BYTE_LEN;
+  cbc_plaintext->data = (unsigned char *) malloc(cbc_plaintext->len);
+
+  ctx = EVP_CIPHER_CTX_new();
+
+  if (aes_key->bit_len == 128) {
+    EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), NULL,
+        aes_key->byte_encoding->data, NULL);
+  } else if (aes_key->bit_len == 192) {
+    EVP_DecryptInit_ex(ctx, EVP_aes_192_ecb(), NULL,
+        aes_key->byte_encoding->data, NULL);
+  } else if (aes_key->bit_len == 256) {
+    EVP_DecryptInit_ex(ctx, EVP_aes_256_ecb(), NULL,
+        aes_key->byte_encoding->data, NULL);
+  } else {
+    fprintf(stderr, "Invalid key length of %ld bits\n", aes_key->bit_len);
+    exit(1);
+  }
+
+  EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+  for (i = cbc_plaintext->len - AES_BLOCK_BYTE_LEN;
+      i >= 0; i -= AES_BLOCK_BYTE_LEN) {
+    EVP_DecryptUpdate(ctx, aes_out_buf, &outlen,
+        &cbc_ciphertext->data[i + AES_BLOCK_BYTE_LEN], AES_BLOCK_BYTE_LEN);
+    aes_block_xor(aes_out_buf, &cbc_ciphertext->data[i], plaintext_buf);
+    for (j = 0; j < AES_BLOCK_BYTE_LEN; j++) {
+      cbc_plaintext->data[i + j] = plaintext_buf[j];
+    }
+  }
+  EVP_CIPHER_CTX_free(ctx);
+
+  return cbc_plaintext;
 }
