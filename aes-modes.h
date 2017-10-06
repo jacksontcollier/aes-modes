@@ -50,6 +50,8 @@ ByteBuf* get_cbc_plaintext(const char* plaintext_file);
 
 size_t get_cbc_pkcs7pad_required(const ByteBuf* unpadded_plaintext);
 
+ByteBuf* get_iv(const char* iv_file);
+
 ByteBuf* generate_new_iv();
 
 void aes_block_xor(const unsigned char* plaintext_block,
