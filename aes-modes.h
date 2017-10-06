@@ -11,3 +11,5 @@ ArgFlags* new_ArgFlags();
 ArgFlags* parse_arg_flags(int argc, char * const argv[]);
 
 void print_arg_flags(const ArgFlags *arg_flags);
+
+char* read_file_contents(char *filename);

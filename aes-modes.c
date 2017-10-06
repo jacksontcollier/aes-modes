@@ -70,3 +70,27 @@ void print_arg_flags(const ArgFlags *arg_flags)
   }
 }
 
+char* read_file_contents(char *filename)
+{
+  FILE* fin;
+  char* file_buf;
+  size_t file_length;
+  size_t bytes_read;
+  size_t end;
+
+  fin = fopen(filename, "r");
+  fseek(fin, 0, SEEK_END);
+  file_length = ftell(fin);
+  fseek(fin, 0, SEEK_SET);
+  file_buf = (char *) malloc(sizeof(char) * (file_length + 1));
+
+  if (file_buf != NULL) {
+    bytes_read = fread(file_buf, sizeof(char), file_length, fin);
+    end = bytes_read < file_length - 1 ? bytes_read : file_length - 1;
+    file_buf[end] = '\0';
+  }
+  fclose(fin);
+
+  return file_buf;
+}
+
