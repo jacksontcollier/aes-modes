@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openssl/rand.h>
+
 const char *arg_flag_options = "k:i:o:v:";
 
 const size_t AES_BLOCK_BYTE_LEN = 16;
@@ -200,5 +202,38 @@ ByteBuf* get_cbc_plaintext(const char* plaintext_file)
 size_t get_cbc_pkcs7pad_required(const ByteBuf* unpadded_plaintext)
 {
   return AES_BLOCK_BYTE_LEN - (unpadded_plaintext->len % AES_BLOCK_BYTE_LEN);
+}
+
+ByteBuf* get_iv(const char *iv_file)
+{
+  ByteBuf* iv;
+  ByteBuf* iv_file_buf;
+
+  if (iv_file == NULL) {
+    iv = generate_new_iv();
+  } else {
+    iv_file_buf = read_file_contents(iv_file);
+    iv = hex_decode(iv_file_buf);
+  }
+
+  return iv;
+}
+
+ByteBuf* generate_new_iv()
+{
+  /* Figured out how to do this by reading SO posts and openssl docs. */
+  int sprng_bytes_received;
+  ByteBuf* iv;
+
+  sprng_bytes_received = 0;
+  iv = new_ByteBuf();
+  iv->len = AES_BLOCK_BYTE_LEN;
+  iv->data = (unsigned char *) malloc(iv->len);
+
+  while (!sprng_bytes_received) {
+    sprng_bytes_received = RAND_bytes(iv->data, iv->len);
+  }
+
+  return iv;
 }
 

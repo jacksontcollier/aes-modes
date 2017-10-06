@@ -48,4 +48,6 @@ ByteBuf* get_cbc_plaintext(const char* plaintext_file);
 
 size_t get_cbc_pkcs7pad_required(const ByteBuf* unpadded_plaintext);
 
+ByteBuf* generate_new_iv();
+
 #endif

@@ -1,6 +1,7 @@
 CC = gcc
 CFLAGS = -Wall
 TARGET_EXE = cbc-enc ctr-enc cbc-dec ctr-dec
+SSL_LFLAGS = -lssl -lcrypto
 
 .PHONY: all
 all: $(TARGET_EXE)
@@ -10,16 +11,16 @@ clean:
 	rm -rf *.o $(TARGET_EXE)
 
 cbc-enc: cbc-enc.o aes-modes.o
-	$(CC) cbc-enc.o aes-modes.o -o cbc-enc
+	$(CC) cbc-enc.o aes-modes.o $(SSL_LFLAGS) -o cbc-enc
 
 ctr-enc: ctr-enc.o aes-modes.o
-	$(CC) ctr-enc.o aes-modes.o -o ctr-enc
+	$(CC) ctr-enc.o aes-modes.o $(SSL_LFLAGS) -o ctr-enc
 
 cbc-dec: cbc-dec.o aes-modes.o
-	$(CC) cbc-dec.o aes-modes.o -o cbc-dec
+	$(CC) cbc-dec.o aes-modes.o $(SSL_LFLAGS) -o cbc-dec
 
 ctr-dec: ctr-dec.o aes-modes.o
-	$(CC) ctr-dec.o aes-modes.o -o ctr-dec
+	$(CC) ctr-dec.o aes-modes.o $(SSL_LFLAGS) -o ctr-dec
 
 cbc-enc.o: cbc-enc.c aes-modes.h
 	$(CC) -c $(CFLAGS) cbc-enc.c -o cbc-enc.o
