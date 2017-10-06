@@ -61,4 +61,6 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv);
 
 ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext);
 
+void write_cbc_decrypted_ciphertext(ByteBuf* cbc_plaintext, char* outfile);
+
 #endif

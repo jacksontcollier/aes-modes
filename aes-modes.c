@@ -334,3 +334,19 @@ ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext)
 
   return cbc_plaintext;
 }
+
+void write_cbc_decrypted_ciphertext(ByteBuf* cbc_plaintext, char* outfile)
+{
+  size_t num_pad_bytes;
+  size_t true_plaintext_len;
+  FILE* fout;
+
+  num_pad_bytes = (size_t) cbc_plaintext->data[cbc_plaintext->len-1];
+  true_plaintext_len = cbc_plaintext->len - num_pad_bytes;
+
+  fout = fopen(outfile, "w");
+  fwrite(cbc_plaintext->data, 1, true_plaintext_len, fout);
+  fclose(fout);
+
+  return;
+}
