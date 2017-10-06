@@ -370,3 +370,31 @@ ByteBuf* new_incremented_iv(const ByteBuf* iv)
   return incremented_iv;
 }
 
+CtrModeBlock* new_CtrModeBlock()
+{
+  CtrModeBlock *block;
+
+  block = (CtrModeBlock *) malloc(sizeof(CtrModeBlock));
+  block->in_begin = NULL;
+  block->out_begin = NULL;
+  block->len = 0;
+  block->iv = NULL;
+
+  return block;
+}
+
+CtrModeThreadData* new_CtrModeThreadData()
+{
+  CtrModeThreadData *thread_data;
+
+  thread_data = malloc(sizeof(CtrModeThreadData));
+  thread_data->blocks = NULL;
+  thread_data->num_blocks = 0;
+  thread_data->aes_key = NULL;
+  thread_data->ctx = NULL;
+  thread_data->block_buf = new_ByteBuf();
+  thread_data->block_buf->len = AES_BLOCK_BYTE_LEN;
+  thread_data->block_buf->data = (unsigned char *) malloc(AES_BLOCK_BYTE_LEN);
+
+  return thread_data;
+}

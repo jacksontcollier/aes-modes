@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include <openssl/evp.h>
+
 typedef struct byte_buf
 {
   unsigned char* data;
@@ -64,4 +66,27 @@ ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext);
 void write_cbc_decrypted_ciphertext(ByteBuf* cbc_plaintext, char* outfile);
 
 ByteBuf* new_incremented_iv(const ByteBuf* iv);
+
+typedef struct ctr_mode_block
+{
+  unsigned char *in_begin;
+  unsigned char *out_begin;
+  size_t len;
+  ByteBuf *iv;
+} CtrModeBlock;
+
+CtrModeBlock* new_CtrModeBlock();
+
+typedef struct ctr_mode_thread_data
+{
+  CtrModeBlock *blocks;
+  size_t num_blocks;
+  AesKey *aes_key;
+  EVP_CIPHER_CTX *ctx;
+  ByteBuf *block_buf;
+} CtrModeThreadData;
+
+CtrModeThreadData* new_CtrModeThreadData();
+
+
 #endif
