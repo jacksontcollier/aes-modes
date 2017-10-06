@@ -308,7 +308,7 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
 ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext)
 {
   int outlen;
-  size_t i;
+  long i;
   ByteBuf* cbc_plaintext;
   EVP_CIPHER_CTX* ctx;
   unsigned char aes_out_buf[AES_BLOCK_BYTE_LEN];
