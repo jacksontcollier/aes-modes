@@ -122,6 +122,16 @@ ByteBuf* read_file_contents(const char *filename)
   return file_buf;
 }
 
+void write_file(const ByteBuf* file_buf, const char* filename)
+{
+  FILE* fout;
+  fout = fopen(filename, "w");
+  fwrite(file_buf->data, 1, file_buf->len, fout);
+  fclose(fout);
+
+  return;
+}
+
 AesKey* get_aes_key(const char* key_file)
 {
   AesKey* aes_key;
@@ -296,4 +306,3 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
 
   return cbc_ciphertext;
 }
-

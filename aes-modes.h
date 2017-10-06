@@ -40,6 +40,8 @@ void print_arg_flags(const ArgFlags *arg_flags);
 
 ByteBuf* read_file_contents(const char *filename);
 
+void write_file(const ByteBuf* file_buf, const char* filename);
+
 unsigned char hex_2_dec(const unsigned char hex_char);
 
 ByteBuf* hex_decode(const ByteBuf* hex_buf);
