@@ -63,4 +63,5 @@ ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext);
 
 void write_cbc_decrypted_ciphertext(ByteBuf* cbc_plaintext, char* outfile);
 
+ByteBuf* new_incremented_iv(const ByteBuf* iv);
 #endif

@@ -350,3 +350,23 @@ void write_cbc_decrypted_ciphertext(ByteBuf* cbc_plaintext, char* outfile)
 
   return;
 }
+
+ByteBuf* new_incremented_iv(const ByteBuf* iv)
+{
+  int i;
+  ByteBuf* incremented_iv;
+
+  incremented_iv = new_ByteBuf();
+  incremented_iv->len = AES_BLOCK_BYTE_LEN;
+  incremented_iv->data = (unsigned char *) malloc(incremented_iv->len);
+
+  memcpy(incremented_iv->data, iv->data, AES_BLOCK_BYTE_LEN);
+
+  for (i = incremented_iv->len - 1; i >= 0; i--) {
+    incremented_iv->data[i] = incremented_iv->data[i] + 1;
+    if (incremented_iv->data[i] > 0) break;
+  }
+
+  return incremented_iv;
+}
+
