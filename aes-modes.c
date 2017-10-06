@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 const char *arg_flag_options = "k:i:o:v:";
 
@@ -70,6 +71,16 @@ void print_arg_flags(const ArgFlags *arg_flags)
   }
 }
 
+AesKey* new_AesKey()
+{
+  AesKey* aes_key;
+  aes_key = (AesKey *) malloc(sizeof(AesKey));
+  aes_key->hex_encoding = NULL;
+  aes_key->byte_encoding = NULL;
+
+  return aes_key;
+}
+
 char* read_file_contents(char *filename)
 {
   FILE* fin;
@@ -92,5 +103,56 @@ char* read_file_contents(char *filename)
   fclose(fin);
 
   return file_buf;
+}
+
+AesKey* get_aes_key(char* key_file)
+{
+  AesKey* aes_key;
+
+  aes_key = new_AesKey();
+  aes_key->hex_encoding = read_file_contents(key_file);
+  aes_key->byte_encoding = hex_decode(aes_key->hex_encoding);
+
+  return aes_key;
+}
+
+unsigned char hex_2_dec(char hex_char)
+{
+  if (hex_char >= '0' && hex_char <= '9') {
+    return hex_char - '0';
+  }
+
+  if (hex_char >= 'A' && hex_char <= 'F') {
+    return (hex_char - 'A') + 10;
+  }
+
+  if (hex_char >= 'a' && hex_char <= 'f') {
+    return (hex_char - 'a') + 10;
+  }
+
+  return hex_char;
+}
+
+unsigned char* hex_decode(char* hex_string)
+{
+  size_t i;
+  size_t buf_size;
+  size_t len_hex_string;
+  unsigned char* bytes;
+
+  len_hex_string = strlen(hex_string);
+  buf_size = (len_hex_string / 2) + (len_hex_string % 2) + 1;
+  bytes = (unsigned char *) malloc(sizeof(unsigned char) * buf_size);
+
+  if (bytes != NULL) {
+    for (i = 0; i < len_hex_string; i += 2) {
+      bytes[i / 2] = hex_2_dec(hex_string[i]) << 4;
+      if (i + 1 >= len_hex_string) break;
+      bytes[i / 2] |= hex_2_dec(hex_string[i+1]);
+    }
+    bytes[buf_size-1] = '\0';
+  }
+
+  return bytes;
 }
 

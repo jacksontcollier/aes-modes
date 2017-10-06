@@ -10,6 +10,21 @@ ArgFlags* new_ArgFlags();
 
 ArgFlags* parse_arg_flags(int argc, char * const argv[]);
 
+typedef struct aes_key
+{
+  char* hex_encoding;
+  unsigned char* byte_encoding;
+} AesKey;
+
+AesKey* new_AesKey();
+
+AesKey* get_aes_key(char* key_file);
+
 void print_arg_flags(const ArgFlags *arg_flags);
 
 char* read_file_contents(char *filename);
+
+unsigned char hex_2_dec(char hex_char);
+
+unsigned char* hex_decode(char* hex_string);
+
