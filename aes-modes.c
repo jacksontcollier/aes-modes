@@ -280,7 +280,7 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
     EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL,
         aes_key->byte_encoding->data, NULL);
   } else {
-    // Flag error
+    fprintf(stderr, "Invalid key length of %ld\n", aes_key->bit_len);
     exit(1);
   }
 
