@@ -8,9 +8,9 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 
-const char *arg_flag_options = "k:i:o:v:";
+#define AES_BLOCK_BYTE_LEN 16
 
-const size_t AES_BLOCK_BYTE_LEN = 16;
+const char *arg_flag_options = "k:i:o:v:";
 
 ArgFlags* new_ArgFlags()
 {
@@ -266,7 +266,7 @@ ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
   size_t i;
   ByteBuf* cbc_ciphertext;
   EVP_CIPHER_CTX* ctx;
-  unsigned char xor_out_buf[16];
+  unsigned char xor_out_buf[AES_BLOCK_BYTE_LEN];
 
   cbc_ciphertext = new_ByteBuf();
   cbc_ciphertext->len = iv->len + cbc_plaintext->len;
@@ -313,8 +313,8 @@ ByteBuf* cbc_aes_decrypt(AesKey* aes_key, ByteBuf* cbc_ciphertext)
   size_t i, j;
   ByteBuf* cbc_plaintext;
   EVP_CIPHER_CTX* ctx;
-  unsigned char aes_out_buf[16];
-  unsigned char plaintext_buf[16];
+  unsigned char aes_out_buf[AES_BLOCK_BYTE_LEN];
+  unsigned char plaintext_buf[AES_BLOCK_BYTE_LEN];
 
   cbc_plaintext = new_ByteBuf();
   cbc_plaintext->len = cbc_ciphertext->len - AES_BLOCK_BYTE_LEN;
