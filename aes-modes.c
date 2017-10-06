@@ -77,6 +77,9 @@ AesKey* new_AesKey()
   aes_key = (AesKey *) malloc(sizeof(AesKey));
   aes_key->hex_encoding = NULL;
   aes_key->byte_encoding = NULL;
+  aes_key->hex_len = 0;
+  aes_key->byte_len = 0;
+  aes_key->bit_len = 0;
 
   return aes_key;
 }
@@ -85,19 +88,19 @@ char* read_file_contents(char *filename)
 {
   FILE* fin;
   char* file_buf;
-  size_t file_length;
+  size_t file_len;
   size_t bytes_read;
   size_t end;
 
   fin = fopen(filename, "r");
   fseek(fin, 0, SEEK_END);
-  file_length = ftell(fin);
+  file_len = ftell(fin);
   fseek(fin, 0, SEEK_SET);
-  file_buf = (char *) malloc(sizeof(char) * (file_length + 1));
+  file_buf = (char *) malloc(sizeof(char) * (file_len + 1));
 
   if (file_buf != NULL) {
-    bytes_read = fread(file_buf, sizeof(char), file_length, fin);
-    end = bytes_read < file_length - 1 ? bytes_read : file_length - 1;
+    bytes_read = fread(file_buf, sizeof(char), file_len, fin);
+    end = bytes_read < file_len - 1 ? bytes_read : file_len - 1;
     file_buf[end] = '\0';
   }
   fclose(fin);
@@ -111,6 +114,9 @@ AesKey* get_aes_key(char* key_file)
 
   aes_key = new_AesKey();
   aes_key->hex_encoding = read_file_contents(key_file);
+  aes_key->hex_len = strlen(aes_key->hex_encoding);
+  aes_key->byte_len = (aes_key->hex_len / 2);
+  aes_key->bit_len = aes_key->byte_len * 8;
   aes_key->byte_encoding = hex_decode(aes_key->hex_encoding);
 
   return aes_key;
@@ -141,7 +147,7 @@ unsigned char* hex_decode(char* hex_string)
   unsigned char* bytes;
 
   len_hex_string = strlen(hex_string);
-  buf_size = (len_hex_string / 2) + (len_hex_string % 2) + 1;
+  buf_size = (len_hex_string / 2) + (len_hex_string % 2);
   bytes = (unsigned char *) malloc(sizeof(unsigned char) * buf_size);
 
   if (bytes != NULL) {

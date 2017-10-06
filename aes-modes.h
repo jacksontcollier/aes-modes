@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 typedef struct arg_flags
 {
   char *key_file;
@@ -14,6 +16,9 @@ typedef struct aes_key
 {
   char* hex_encoding;
   unsigned char* byte_encoding;
+  size_t hex_len;
+  size_t byte_len;
+  size_t bit_len;
 } AesKey;
 
 AesKey* new_AesKey();
