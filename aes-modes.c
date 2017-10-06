@@ -7,6 +7,8 @@
 
 const char *arg_flag_options = "k:i:o:v:";
 
+const size_t AES_BLOCK_BYTE_LEN = 16;
+
 ArgFlags* new_ArgFlags()
 {
   ArgFlags *arg_flags = (ArgFlags *) malloc(sizeof(ArgFlags));
@@ -19,7 +21,7 @@ ArgFlags* new_ArgFlags()
   return arg_flags;
 }
 
-ArgFlags* parse_arg_flags(int argc, char * const argv[])
+ArgFlags* parse_arg_flags(const int argc, char * const argv[])
 {
   int option;
   ArgFlags *arg_flags;
@@ -95,7 +97,7 @@ AesKey* new_AesKey()
   return aes_key;
 }
 
-ByteBuf* read_file_contents(char *filename)
+ByteBuf* read_file_contents(const char *filename)
 {
   FILE* fin;
   ByteBuf* file_buf;
@@ -117,7 +119,7 @@ ByteBuf* read_file_contents(char *filename)
   return file_buf;
 }
 
-AesKey* get_aes_key(char* key_file)
+AesKey* get_aes_key(const char* key_file)
 {
   AesKey* aes_key;
 
@@ -131,7 +133,7 @@ AesKey* get_aes_key(char* key_file)
   return aes_key;
 }
 
-unsigned char hex_2_dec(unsigned char hex_char)
+unsigned char hex_2_dec(const unsigned char hex_char)
 {
   if (hex_char >= '0' && hex_char <= '9') {
     return hex_char - '0';
@@ -148,7 +150,7 @@ unsigned char hex_2_dec(unsigned char hex_char)
   return hex_char;
 }
 
-ByteBuf* hex_decode(ByteBuf* hex_buf)
+ByteBuf* hex_decode(const ByteBuf* hex_buf)
 {
   size_t i;
   size_t buf_size;
@@ -168,5 +170,35 @@ ByteBuf* hex_decode(ByteBuf* hex_buf)
   }
 
   return bytes;
+}
+
+ByteBuf* get_cbc_plaintext(const char* plaintext_file)
+{
+  size_t i;
+  size_t pad_bytes_required;
+  ByteBuf *unpadded_plaintext;
+  ByteBuf *padded_plaintext;
+
+  unpadded_plaintext = read_file_contents(plaintext_file);
+  pad_bytes_required = get_cbc_pkcs7pad_required(unpadded_plaintext);
+  padded_plaintext = new_ByteBuf();
+  padded_plaintext->len = unpadded_plaintext->len + pad_bytes_required;
+  padded_plaintext->data = (unsigned char *) malloc(padded_plaintext->len);
+
+  for (i = 0; i < unpadded_plaintext->len; i++) {
+    padded_plaintext->data[i] = unpadded_plaintext->data[i];
+  }
+
+  while (i < padded_plaintext->len) {
+    padded_plaintext->data[i] = (unsigned char) pad_bytes_required;
+    i++;
+  }
+
+  return padded_plaintext;
+}
+
+size_t get_cbc_pkcs7pad_required(const ByteBuf* unpadded_plaintext)
+{
+  return AES_BLOCK_BYTE_LEN - (unpadded_plaintext->len % AES_BLOCK_BYTE_LEN);
 }
 

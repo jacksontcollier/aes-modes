@@ -1,3 +1,6 @@
+#ifndef AESMODES_H
+#define AESMODES_H
+
 #include <stddef.h>
 
 typedef struct byte_buf
@@ -18,7 +21,7 @@ typedef struct arg_flags
 
 ArgFlags* new_ArgFlags();
 
-ArgFlags* parse_arg_flags(int argc, char * const argv[]);
+ArgFlags* parse_arg_flags(const int argc, char * const argv[]);
 
 typedef struct aes_key
 {
@@ -31,13 +34,18 @@ typedef struct aes_key
 
 AesKey* new_AesKey();
 
-AesKey* get_aes_key(char* key_file);
+AesKey* get_aes_key(const char* key_file);
 
 void print_arg_flags(const ArgFlags *arg_flags);
 
-ByteBuf* read_file_contents(char *filename);
+ByteBuf* read_file_contents(const char *filename);
 
-unsigned char hex_2_dec(unsigned char hex_char);
+unsigned char hex_2_dec(const unsigned char hex_char);
 
-ByteBuf* hex_decode(ByteBuf* hex_buf);
+ByteBuf* hex_decode(const ByteBuf* hex_buf);
 
+ByteBuf* get_cbc_plaintext(const char* plaintext_file);
+
+size_t get_cbc_pkcs7pad_required(const ByteBuf* unpadded_plaintext);
+
+#endif
