@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openssl/evp.h>
 #include <openssl/rand.h>
 
 const char *arg_flag_options = "k:i:o:v:";
@@ -247,5 +248,52 @@ void aes_block_xor(const unsigned char* plaintext_block,
   }
 
   return;
+}
+
+ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv)
+{
+  int outlen;
+  size_t i;
+  ByteBuf* cbc_ciphertext;
+  EVP_CIPHER_CTX* ctx;
+  unsigned char xor_out_buf[16];
+
+  cbc_ciphertext = new_ByteBuf();
+  cbc_ciphertext->len = iv->len + cbc_plaintext->len;
+  cbc_ciphertext->data = (unsigned char *) malloc(cbc_ciphertext->len);
+
+  /* prepend iv to ciphertext */
+  for (i = 0; i < iv->len; i++) {
+    cbc_ciphertext->data[i] = iv->data[i];
+  }
+
+  ctx = EVP_CIPHER_CTX_new();
+
+  /* choose appropriate aes implementation according to key length */
+  if (aes_key->bit_len == 128) {
+    EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL,
+        aes_key->byte_encoding->data, NULL);
+  } else if (aes_key->bit_len == 192) {
+    EVP_EncryptInit_ex(ctx, EVP_aes_192_ecb(), NULL,
+        aes_key->byte_encoding->data, NULL);
+  } else if (aes_key->bit_len == 256) {
+    EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL,
+        aes_key->byte_encoding->data, NULL);
+  } else {
+    // Flag error
+    exit(1);
+  }
+
+  EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+  for (size_t i = 0; i < cbc_plaintext->len; i += AES_BLOCK_BYTE_LEN) {
+    aes_block_xor(&cbc_plaintext->data[i], &cbc_ciphertext->data[i],
+        xor_out_buf);
+    EVP_EncryptUpdate(ctx, &cbc_ciphertext->data[i+AES_BLOCK_BYTE_LEN], &outlen,
+        xor_out_buf, AES_BLOCK_BYTE_LEN);
+  }
+  EVP_CIPHER_CTX_free(ctx);
+
+  return cbc_ciphertext;
 }
 

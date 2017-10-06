@@ -52,4 +52,6 @@ ByteBuf* generate_new_iv();
 
 void aes_block_xor(const unsigned char* plaintext_block,
     const unsigned char* ciphertext_block, unsigned char* out);
+
+ByteBuf* cbc_aes_encrypt(AesKey* aes_key, ByteBuf* cbc_plaintext, ByteBuf* iv);
 #endif
