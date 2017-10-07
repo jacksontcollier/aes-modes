@@ -13,6 +13,8 @@
 #define AES_192_BIT_KEY_LEN 192
 #define AES_256_BIT_KEY_LEN 256
 
+#define CTR_MODE_NUM_THREADS 4
+
 const char *arg_flag_options = "k:i:o:v:";
 
 ArgFlags* new_ArgFlags()
@@ -389,6 +391,7 @@ CtrModeThreadData* new_CtrModeThreadData()
 
   thread_data = malloc(sizeof(CtrModeThreadData));
   thread_data->blocks = NULL;
+  thread_data->block_capacity = 0;
   thread_data->num_blocks = 0;
   thread_data->aes_key = NULL;
   thread_data->ctx = NULL;
@@ -398,3 +401,65 @@ CtrModeThreadData* new_CtrModeThreadData()
 
   return thread_data;
 }
+
+ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv)
+{
+  size_t i;
+  size_t num_plaintext_blocks;
+  CtrModeThreadData *thread_data[CTR_MODE_NUM_THREADS];
+  CtrModeThreadData *assigned_thread;
+  ByteBuf *ctr_ciphertext;
+  ByteBuf *incremented_iv;
+  EVP_CIPHER_CTX *ctx;
+  CtrModeBlock *block;
+
+  ctr_ciphertext = new_ByteBuf();
+  ctr_ciphertext->len = ctr_plaintext->len + AES_BLOCK_BYTE_LEN;
+  ctr_ciphertext->data = (unsigned char *) malloc(ctr_ciphertext->len);
+  memcpy(ctr_ciphertext->data, iv->data, iv->len);
+
+  ctx = EVP_CIPHER_CTX_new();
+  EVP_EncryptInit_ex(ctx, get_evp_cipher_type(aes_key), NULL,
+      aes_key->byte_encoding->data, NULL);
+  EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+  num_plaintext_blocks = ctr_plaintext->len / AES_BLOCK_BYTE_LEN;
+  if (ctr_plaintext->len % AES_BLOCK_BYTE_LEN > 0) {
+    num_plaintext_blocks++;
+  }
+
+  /* Create ctr mode data structure for each spawned thread */
+  for (i = 0; i < CTR_MODE_NUM_THREADS; i++) {
+    thread_data[i] = new_CtrModeThreadData();
+    thread_data[i]->block_capacity = num_plaintext_blocks / CTR_MODE_NUM_THREADS;
+    if (i < (num_plaintext_blocks % CTR_MODE_NUM_THREADS)) {
+      thread_data[i]->block_capacity++;
+    }
+    thread_data[i]->blocks = (CtrModeBlock **) malloc(sizeof(CtrModeBlock *) *
+        thread_data[i]->block_capacity);
+    thread_data[i]->aes_key = aes_key;
+    thread_data[i]->ctx = ctx;
+  }
+
+  incremented_iv = iv;
+
+  /* Partition plaintext into blocks, assign block to thread */
+  for (i = 0; i < ctr_plaintext->len; i += AES_BLOCK_BYTE_LEN) {
+    block = new_CtrModeBlock();
+    block->in_begin = &(ctr_plaintext->data[i]);
+    block->out_begin = &(ctr_ciphertext->data[i + AES_BLOCK_BYTE_LEN]);
+    if (i + AES_BLOCK_BYTE_LEN <= ctr_plaintext->len) {
+      block->len = AES_BLOCK_BYTE_LEN;
+    } else {
+      block->len = ctr_plaintext->len - i;
+    }
+    block->iv = incremented_iv;
+    incremented_iv = new_incremented_iv(incremented_iv);
+    assigned_thread = thread_data[i % CTR_MODE_NUM_THREADS];
+    assigned_thread->blocks[assigned_thread->num_blocks] = block;
+    assigned_thread->num_blocks++;
+  }
+
+  return ctr_ciphertext;
+}
+

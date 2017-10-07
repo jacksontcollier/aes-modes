@@ -79,7 +79,8 @@ CtrModeBlock* new_CtrModeBlock();
 
 typedef struct ctr_mode_thread_data
 {
-  CtrModeBlock *blocks;
+  CtrModeBlock **blocks;
+  size_t block_capacity;
   size_t num_blocks;
   AesKey *aes_key;
   EVP_CIPHER_CTX *ctx;
@@ -88,5 +89,5 @@ typedef struct ctr_mode_thread_data
 
 CtrModeThreadData* new_CtrModeThreadData();
 
-
+ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv);
 #endif
