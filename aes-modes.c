@@ -463,3 +463,21 @@ ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv)
   return ctr_ciphertext;
 }
 
+void ctr_thread_encrypt(CtrModeThreadData *thread_data)
+{
+  int outlen;
+  size_t i;
+  unsigned char xor_buf[AES_BLOCK_BYTE_LEN];
+
+  for (i = 0; i < thread_data->num_blocks; i++) {
+    EVP_EncryptUpdate(thread_data->ctx, thread_data->block_buf->data, &outlen,
+        thread_data->blocks[i]->iv->data, thread_data->blocks[i]->iv->len);
+    aes_block_xor(thread_data->blocks[i]->in_begin, thread_data->block_buf->data,
+        xor_buf);
+    memcpy(thread_data->blocks[i]->out_begin, xor_buf,
+        thread_data->blocks[i]->len);
+  }
+
+  return;
+}
+

@@ -90,4 +90,6 @@ typedef struct ctr_mode_thread_data
 CtrModeThreadData* new_CtrModeThreadData();
 
 ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv);
+
+void ctr_thread_encrypt(CtrModeThreadData *thread_data);
 #endif
