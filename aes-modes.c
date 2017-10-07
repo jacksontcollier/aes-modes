@@ -406,7 +406,7 @@ CtrModeThreadData* new_CtrModeThreadData()
 
 ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv)
 {
-  size_t i;
+  size_t i, block_count;
   size_t num_plaintext_blocks;
   CtrModeThreadData *thread_data[CTR_MODE_NUM_THREADS];
   CtrModeThreadData *assigned_thread;
@@ -445,6 +445,7 @@ ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv)
 
   incremented_iv = iv;
 
+  block_count = 0;
   /* Partition plaintext into blocks, assign block to thread */
   for (i = 0; i < ctr_plaintext->len; i += AES_BLOCK_BYTE_LEN) {
     block = new_CtrModeBlock();
@@ -457,7 +458,8 @@ ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv)
     }
     block->iv = incremented_iv;
     incremented_iv = new_incremented_iv(incremented_iv);
-    assigned_thread = thread_data[i % CTR_MODE_NUM_THREADS];
+    assigned_thread = thread_data[block_count % CTR_MODE_NUM_THREADS];
+    block_count++;
     assigned_thread->blocks[assigned_thread->num_blocks] = block;
     assigned_thread->num_blocks++;
   }
