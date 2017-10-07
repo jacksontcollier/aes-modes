@@ -1,4 +1,5 @@
 #include "aes-modes.h"
+#include <stdio.h>
 
 int main(int argc, char **argv)
 {
@@ -13,7 +14,7 @@ int main(int argc, char **argv)
   ctr_plaintext = read_file_contents(arg_flags->in_file);
   iv = get_iv(arg_flags->iv_file);
   ctr_ciphertext = ctr_aes_encrypt(aes_key, ctr_plaintext, iv);
+  write_file(ctr_ciphertext, arg_flags->out_file);
 
-  print_arg_flags(arg_flags);
   return 0;
 }
