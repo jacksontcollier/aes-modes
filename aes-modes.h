@@ -91,5 +91,5 @@ CtrModeThreadData* new_CtrModeThreadData();
 
 ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv);
 
-void ctr_thread_encrypt(CtrModeThreadData *thread_data);
+void *ctr_thread_encrypt(void *data);
 #endif

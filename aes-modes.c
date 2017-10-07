@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pthread.h>
+
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 
@@ -460,14 +462,30 @@ ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv)
     assigned_thread->num_blocks++;
   }
 
+  pthread_t tcb_0, tcb_1, tcb_2, tcb_3;
+  void *status;
+
+  pthread_create(&tcb_0, NULL, ctr_thread_encrypt, thread_data[0]);
+  pthread_create(&tcb_1, NULL, ctr_thread_encrypt, thread_data[1]);
+  pthread_create(&tcb_2, NULL, ctr_thread_encrypt, thread_data[2]);
+  pthread_create(&tcb_3, NULL, ctr_thread_encrypt, thread_data[3]);
+
+  pthread_join(tcb_0, &status);
+  pthread_join(tcb_1, &status);
+  pthread_join(tcb_2, &status);
+  pthread_join(tcb_3, &status);
+
   return ctr_ciphertext;
 }
 
-void ctr_thread_encrypt(CtrModeThreadData *thread_data)
+void *ctr_thread_encrypt(void *data)
 {
   int outlen;
   size_t i;
   unsigned char xor_buf[AES_BLOCK_BYTE_LEN];
+  CtrModeThreadData *thread_data;
+
+  thread_data = (CtrModeThreadData *) data;
 
   for (i = 0; i < thread_data->num_blocks; i++) {
     EVP_EncryptUpdate(thread_data->ctx, thread_data->block_buf->data, &outlen,
@@ -478,6 +496,6 @@ void ctr_thread_encrypt(CtrModeThreadData *thread_data)
         thread_data->blocks[i]->len);
   }
 
-  return;
+  return NULL;
 }
 
