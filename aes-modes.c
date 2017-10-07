@@ -501,3 +501,84 @@ void *ctr_thread_encrypt(void *data)
   return NULL;
 }
 
+ByteBuf* ctr_aes_decrypt(AesKey *aes_key, ByteBuf* ctr_ciphertext)
+{
+  size_t i, block_count;
+  size_t num_ciphertext_blocks;
+  CtrModeThreadData *thread_data[CTR_MODE_NUM_THREADS];
+  CtrModeThreadData *assigned_thread;
+  ByteBuf *ctr_plaintext;
+  ByteBuf *iv;
+  ByteBuf *incremented_iv;
+  EVP_CIPHER_CTX *ctx;
+  CtrModeBlock *block;
+
+  iv = new_ByteBuf();
+  iv->len = AES_BLOCK_BYTE_LEN;
+  iv->data = ctr_ciphertext->data;
+  ctr_ciphertext->len = ctr_ciphertext->len - AES_BLOCK_BYTE_LEN;
+  ctr_ciphertext->data = &(ctr_ciphertext->data[AES_BLOCK_BYTE_LEN]);
+
+  ctr_plaintext = new_ByteBuf();
+  ctr_plaintext->len = ctr_ciphertext->len;
+  ctr_plaintext->data = (unsigned char *) malloc(ctr_plaintext->len);
+
+  ctx = EVP_CIPHER_CTX_new();
+  EVP_EncryptInit_ex(ctx, get_evp_cipher_type(aes_key), NULL,
+      aes_key->byte_encoding->data, NULL);
+  EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+  num_ciphertext_blocks = ctr_ciphertext->len / AES_BLOCK_BYTE_LEN;
+  if (ctr_ciphertext->len % AES_BLOCK_BYTE_LEN > 0) {
+    num_ciphertext_blocks++;
+  }
+
+  /* Create ctr mode data structure for each spawned thread */
+  for (i = 0; i < CTR_MODE_NUM_THREADS; i++) {
+    thread_data[i] = new_CtrModeThreadData();
+    thread_data[i]->block_capacity = num_ciphertext_blocks / CTR_MODE_NUM_THREADS;
+    if (i < (num_ciphertext_blocks % CTR_MODE_NUM_THREADS)) {
+      thread_data[i]->block_capacity++;
+    }
+    thread_data[i]->blocks = (CtrModeBlock **) malloc(sizeof(CtrModeBlock *) *
+        thread_data[i]->block_capacity);
+    thread_data[i]->aes_key = aes_key;
+    thread_data[i]->ctx = ctx;
+  }
+
+  incremented_iv = iv;
+
+  block_count = 0;
+  /* Partition ciphertext into blocks, assign block to thread */
+  for (i = 0; i < ctr_ciphertext->len; i += AES_BLOCK_BYTE_LEN) {
+    block = new_CtrModeBlock();
+    block->in_begin = &(ctr_ciphertext->data[i]);
+    block->out_begin = &(ctr_plaintext->data[i]);
+    if (i + AES_BLOCK_BYTE_LEN <= ctr_ciphertext->len) {
+      block->len = AES_BLOCK_BYTE_LEN;
+    } else {
+      block->len = ctr_ciphertext->len - i;
+    }
+    block->iv = incremented_iv;
+    incremented_iv = new_incremented_iv(incremented_iv);
+    assigned_thread = thread_data[block_count % CTR_MODE_NUM_THREADS];
+    block_count++;
+    assigned_thread->blocks[assigned_thread->num_blocks] = block;
+    assigned_thread->num_blocks++;
+  }
+
+  pthread_t tcb_0, tcb_1, tcb_2, tcb_3;
+  void *status;
+
+  pthread_create(&tcb_0, NULL, ctr_thread_encrypt, thread_data[0]);
+  pthread_create(&tcb_1, NULL, ctr_thread_encrypt, thread_data[1]);
+  pthread_create(&tcb_2, NULL, ctr_thread_encrypt, thread_data[2]);
+  pthread_create(&tcb_3, NULL, ctr_thread_encrypt, thread_data[3]);
+
+  pthread_join(tcb_0, &status);
+  pthread_join(tcb_1, &status);
+  pthread_join(tcb_2, &status);
+  pthread_join(tcb_3, &status);
+
+  return ctr_plaintext;
+}

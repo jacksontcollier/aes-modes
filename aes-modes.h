@@ -92,4 +92,7 @@ CtrModeThreadData* new_CtrModeThreadData();
 ByteBuf* ctr_aes_encrypt(AesKey *aes_key, ByteBuf* ctr_plaintext, ByteBuf* iv);
 
 void *ctr_thread_encrypt(void *data);
+
+ByteBuf* ctr_aes_decrypt(AesKey *aes_key, ByteBuf* ctr_ciphertext);
+
 #endif
