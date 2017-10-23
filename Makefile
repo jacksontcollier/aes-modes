@@ -1,38 +1,56 @@
 CC = gcc
 CFLAGS = -Wall
-TARGET_EXE = cbc-enc ctr-enc cbc-dec ctr-dec
+TARGET_EXE = $(BIN_DIR)/cbc-enc $(BIN_DIR)/ctr-enc $(BIN_DIR)/cbc-dec $(BIN_DIR)/ctr-dec \
+	     cbc-enc cbc-dec ctr-enc ctr-dec
 LFLAGS = -lssl -lcrypto -lpthread
+BIN_DIR = bin
+SRC_DIR = src
 
 .PHONY: all
-all: $(TARGET_EXE)
+all: BUILD_DIRECTORIES $(TARGET_EXE)
 
 .PHONY: clean
 clean:
-	rm -rf *.o $(TARGET_EXE)
+	rm -rf bin cbc-enc cbc-dec ctr-enc ctr-dec
 
-cbc-enc: cbc-enc.o aes-modes.o
-	$(CC) cbc-enc.o aes-modes.o $(LFLAGS) -o cbc-enc
+BUILD_DIRECTORIES:
+	$(shell mkdir -p bin)
 
-ctr-enc: ctr-enc.o aes-modes.o
-	$(CC) ctr-enc.o aes-modes.o $(LFLAGS) -o ctr-enc
+cbc-enc: $(BIN_DIR)/cbc-enc
+	$(shell ln -s $(BIN_DIR)/cbc-enc cbc-enc)
 
-cbc-dec: cbc-dec.o aes-modes.o
-	$(CC) cbc-dec.o aes-modes.o $(LFLAGS) -o cbc-dec
+cbc-dec: $(BIN_DIR)/cbc-dec
+	$(shell ln -s $(BIN_DIR)/cbc-dec cbc-dec)
 
-ctr-dec: ctr-dec.o aes-modes.o
-	$(CC) ctr-dec.o aes-modes.o $(LFLAGS) -o ctr-dec
+ctr-enc: $(BIN_DIR)/ctr-enc
+	$(shell ln -s $(BIN_DIR)/ctr-enc ctr-enc)
 
-cbc-enc.o: cbc-enc.c aes-modes.h
-	$(CC) -c $(CFLAGS) cbc-enc.c -o cbc-enc.o
+ctr-dec: $(BIN_DIR)/ctr-dec
+	$(shell ln -s $(BIN_DIR)/ctr-dec ctr-dec)
 
-ctr-enc.o: ctr-enc.c aes-modes.h
-	$(CC) -c $(CFLAGS) ctr-enc.c -o ctr-enc.o
+$(BIN_DIR)/cbc-enc: $(BIN_DIR)/cbc-enc.o $(BIN_DIR)/aes-modes.o
+	$(CC) $(BIN_DIR)/cbc-enc.o $(BIN_DIR)/aes-modes.o $(LFLAGS) -o $(BIN_DIR)/cbc-enc
 
-cbc-dec.o: cbc-dec.c aes-modes.h
-	$(CC) -c $(CFLAGS) cbc-dec.c -o cbc-dec.o
+$(BIN_DIR)/ctr-enc: $(BIN_DIR)/ctr-enc.o $(BIN_DIR)/aes-modes.o
+	$(CC) $(BIN_DIR)/ctr-enc.o $(BIN_DIR)/aes-modes.o $(LFLAGS) -o $(BIN_DIR)/ctr-enc
 
-ctr-dec.o: ctr-dec.c aes-modes.h
-	$(CC) -c $(CFLAGS) ctr-dec.c -o ctr-dec.o
+$(BIN_DIR)/cbc-dec: $(BIN_DIR)/cbc-dec.o $(BIN_DIR)/aes-modes.o
+	$(CC) $(BIN_DIR)/cbc-dec.o $(BIN_DIR)/aes-modes.o $(LFLAGS) -o $(BIN_DIR)/cbc-dec
 
-aes-modes.o: aes-modes.h aes-modes.c
-	$(CC) -c $(CFLAGS) aes-modes.c -o aes-modes.o
+$(BIN_DIR)/ctr-dec: $(BIN_DIR)/ctr-dec.o $(BIN_DIR)/aes-modes.o
+	$(CC) $(BIN_DIR)/ctr-dec.o $(BIN_DIR)/aes-modes.o $(LFLAGS) -o $(BIN_DIR)/ctr-dec
+
+$(BIN_DIR)/cbc-enc.o: $(SRC_DIR)/cbc-enc.c $(SRC_DIR)/aes-modes.h
+	$(CC) -c $(CFLAGS) $(SRC_DIR)/cbc-enc.c -o $(BIN_DIR)/cbc-enc.o
+
+$(BIN_DIR)/ctr-enc.o: $(SRC_DIR)/ctr-enc.c $(SRC_DIR)/aes-modes.h
+	$(CC) -c $(CFLAGS) $(SRC_DIR)/ctr-enc.c -o $(BIN_DIR)/ctr-enc.o
+
+$(BIN_DIR)/cbc-dec.o: $(SRC_DIR)/cbc-dec.c $(SRC_DIR)/aes-modes.h
+	$(CC) -c $(CFLAGS) $(SRC_DIR)/cbc-dec.c -o $(BIN_DIR)/cbc-dec.o
+
+$(BIN_DIR)/ctr-dec.o: $(SRC_DIR)/ctr-dec.c $(SRC_DIR)/aes-modes.h
+	$(CC) -c $(CFLAGS) $(SRC_DIR)/ctr-dec.c -o $(BIN_DIR)/ctr-dec.o
+
+$(BIN_DIR)/aes-modes.o: $(SRC_DIR)/aes-modes.h $(SRC_DIR)/aes-modes.c
+	$(CC) -c $(CFLAGS) $(SRC_DIR)/aes-modes.c -o $(BIN_DIR)/aes-modes.o
